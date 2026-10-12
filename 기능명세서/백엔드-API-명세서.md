@@ -6,10 +6,11 @@
 | --- | --- |
 | 서비스명 | 3J |
 | 문서명 | 백엔드 API 명세서 |
-| 버전 | v2.0 |
+| 버전 | v2.1 |
 | 작성일 | 2026-10-12 |
-| 서버 | Node.js 내장 `node:http` |
-| 기본 포트 | `8787` |
+| 백엔드 | Java 17 + Spring Boot |
+| 프런트엔드 | React |
+| 기본 포트 | `8080` |
 
 ---
 
@@ -410,7 +411,8 @@ POST /api/auth/signin  { id, password }        → { accessToken } + Refresh 쿠
 
 | 항목 | 내용 |
 | --- | --- |
-| 비밀번호 저장 | scrypt (salt 16바이트, keylen 64) |
+| 인증 구현 | Spring Security + JWT 필터 (Access Token 검증) |
+| 비밀번호 저장 | BCrypt 해시 |
 | Access 만료 시 | 401 → 클라이언트가 `/api/auth/refresh` 호출 후 재시도 |
 | Refresh 폐기 | 로그아웃, 만료, 회전 시 서버 저장소에서 `jti` 제거 |
 
@@ -429,15 +431,15 @@ POST /api/auth/signin  { id, password }        → { accessToken } + Refresh 쿠
 
 ---
 
-## 7. 서버 환경 변수
+## 7. 환경 변수 (Spring `application.yml`)
 
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `PORT` | `8787` | 서버 포트 |
-| `JWT_SECRET` | (필수) | JWT 서명 키 |
-| `ACCESS_TOKEN_TTL` | `30m` | Access Token 유효기간 |
-| `REFRESH_TOKEN_TTL` | `14d` | Refresh Token 유효기간 |
+| `server.port` | `8080` | 서버 포트 |
+| `JWT_SECRET` | (필수) | JWT 서명 키 (HS256) |
+| `JWT_ACCESS_TTL` | `30m` | Access Token 유효기간 |
+| `JWT_REFRESH_TTL` | `14d` | Refresh Token 유효기간 |
 | `GEMINI_API_KEY` | (없음) | Gemini 키 (미설정 시 폴백) |
 | `GEMINI_MODEL` | `gemini-3.6-flash` | 사용할 모델 |
-| `DATA_FILE` | `apps/server/data/db.json` | JSON 파일 DB 경로 |
-| `ALLOWED_ORIGINS` | `http://localhost:5173` | CORS 허용 오리진 |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | (필수) | 데이터베이스 접속 정보 |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | CORS 허용 오리진 |
