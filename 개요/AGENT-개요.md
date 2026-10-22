@@ -25,7 +25,7 @@ backend: Java 17 + Spring Boot
 frontend: React
 auth: Spring Security + JWT (access + refresh)
 database: RDBMS
-ai: Gemini API (server-side only, key never exposed)
+ai: Groq API (server-side only, key never exposed)
 report_stream: SSE (text/event-stream)
 ```
 
@@ -111,7 +111,7 @@ NEW_USER_BUDGET: { resources: [], limit: 60, notes: {}, purpose: "" }   # 시드
 
 | 메서드 | 경로 | 인증 | 목적 |
 | --- | --- | --- | --- |
-| GET | `/api/health` | – | `{ ok, gemini }` |
+| GET | `/api/health` | – | `{ ok, groq }` |
 | POST | `/api/auth/signup` | – | 회원가입 |
 | POST | `/api/auth/signin` | – | 로그인 |
 | POST | `/api/auth/refresh` | Refresh | 토큰 재발급 |
@@ -178,7 +178,7 @@ detail: ../리소스/리소스.md
 input: AnalysisInput { limit, total, purpose, resources[] }
 process:
   - buildPrompt: 리소스 현황 + 사용 용도 + 서울 리전 요금 카탈로그
-  - Gemini: responseMimeType=json, responseSchema 강제
+  - Groq: response_format=json_object, JSON 스키마 지시
   - sanitize: 허용 외 값은 other/cost 로 대체, 기본값 채움
   - capByAction: 같은 action 최대 3건
   - 최대 추천 15건

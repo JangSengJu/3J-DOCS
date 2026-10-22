@@ -39,6 +39,7 @@
 | 404 | 없는 경로 | `요청한 경로가 없습니다` |
 | 409 | 중복 | `이미 가입된 아이디입니다` |
 | 500 | 서버 오류 | `서버 오류가 발생했습니다` |
+| 503 | AI 스레드 풀 포화 | `서비스를 잠시 사용할 수 없습니다` |
 
 ```json
 { "error": "로그인이 필요합니다" }
@@ -50,7 +51,7 @@
 
 | # | 메서드 | 경로 | 인증 | 설명 |
 | --- | --- | --- | --- | --- |
-| 1 | GET | `/api/health` | 불필요 | 서버 상태 + Gemini 키 유무 |
+| 1 | GET | `/api/health` | 불필요 | 서버 상태 + Groq 키 유무 |
 | 2 | POST | `/api/auth/signup` | 불필요 | 회원가입 |
 | 3 | POST | `/api/auth/signin` | 불필요 | 로그인 (토큰 발급) |
 | 4 | POST | `/api/auth/refresh` | Refresh | Access Token 재발급 |
@@ -70,13 +71,13 @@
 **응답 200**
 
 ```json
-{ "ok": true, "gemini": true }
+{ "ok": true, "groq": true }
 ```
 
 | 필드 | 타입 | 설명 |
 | --- | --- | --- |
 | ok | boolean | 서버 정상 여부 |
-| gemini | boolean | Gemini 키 설정 여부 |
+| groq | boolean | Groq 키 설정 여부 |
 
 ---
 
@@ -315,7 +316,7 @@
 }
 ```
 
-> 리소스가 0건이거나 Gemini 키가 없으면 AI 호출 없이 `fallback: true` 로 즉시 응답한다.
+> 리소스가 0건이거나 Groq 키가 없으면 AI 호출 없이 `fallback: true` 로 즉시 응답한다.
 
 ---
 
@@ -352,6 +353,8 @@ data: [DONE]
 | fallback | boolean | (선택) true 면 폴백/보완 텍스트 |
 
 **동작**: AI 실패·리소스 0건·추천 0건이면 폴백 보고서를 4줄·25ms 단위로 전송. `## 6. 결론` 누락 시 결론만 이어 붙임. 클라이언트가 연결을 끊으면 AI 호출도 취소.
+
+**스트림 도중 실패**: 이미 전송한 내용은 유지한 채 `event: error` + `data: {"error":"REPORT_STREAM_FAILED"}` 를 전송하고 `[DONE]` 은 보내지 않고 스트림을 종료한다. (정상 완료되거나 폴백 보고서가 전송된 경우에만 `[DONE]` 전송)
 
 ---
 
@@ -439,7 +442,11 @@ POST /api/auth/signin  { id, password }        → { accessToken } + Refresh 쿠
 | `JWT_SECRET` | (필수) | JWT 서명 키 (HS256) |
 | `JWT_ACCESS_TTL` | `30m` | Access Token 유효기간 |
 | `JWT_REFRESH_TTL` | `14d` | Refresh Token 유효기간 |
-| `GEMINI_API_KEY` | (없음) | Gemini 키 (미설정 시 폴백) |
-| `GEMINI_MODEL` | `gemini-3.6-flash` | 사용할 모델 |
+| `GROQ_API_KEY` | (없음) | Groq 키 (미설정 시 폴백) |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | 사용할 모델 (무료 티어) |
+| `GROQ_ALLOWED_MODELS` | `openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b` | 허용 모델 (쉼표 구분) |
+| `GROQ_DEADLINE` | `30s` | JSON 호출 전체 데드라인 (초과 시 폴백) |
+| `GROQ_TIMEOUT` | `60s` | 단일 요청 타임아웃 |
+| `GROQ_STREAM_IDLE_TIMEOUT` | `30s` | SSE 스트림 유휴 타임아웃 |
 | `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | (필수) | 데이터베이스 접속 정보 |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | CORS 허용 오리진 |
